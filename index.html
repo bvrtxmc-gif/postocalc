@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Calculadora de Encerrante</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<style>
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #0f172a;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.calculator {
+    background: #020617;
+    padding: 25px;
+    width: 400px;
+    border-radius: 15px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.7);
+}
+
+h1 {
+    text-align: center;
+    color: #38bdf8;
+    margin-bottom: 20px;
+}
+
+.fuel {
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.fuel h2 {
+    color: #a5f3fc;
+    margin-bottom: 10px;
+}
+
+label {
+    display: block;
+    margin: 5px 0 2px;
+    font-size: 14px;
+}
+
+input {
+    width: 100%;
+    padding: 7px;
+    border-radius: 6px;
+    border: none;
+    outline: none;
+    font-size: 14px;
+}
+
+.result {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #22c55e;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    border: none;
+    border-radius: 12px;
+    background: #38bdf8;
+    color: #020617;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0ea5e9;
+}
+
+.total {
+    margin-top: 15px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #1e293b;
+    font-size: 16px;
+    color: #22c55e;
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+}
+</style>
+</head>
+<body>
+
+<div class="calculator">
+<h1>Encerrante Diário</h1>
+
+<!-- Gasolina 1 -->
+<div class="fuel">
+<h2>Gasolina 1</h2>
+<label>Bloco inicial</label>
+<input type="number" id="g1_inicial" step="1">
+<label>Bloco final</label>
+<input type="number" id="g1_final" step="1">
+<label>Preço por litro</label>
+<input type="number" id="g1_preco" step="0.01" value="5.98">
+<div class="result" id="g1_result">Litros: 0 | Total: R$ 0,00</div>
+</div>
+
+<!-- Gasolina 2 -->
+<div class="fuel">
+<h2>Gasolina 2</h2>
+<label>Bloco inicial</label>
+<input type="number" id="g2_inicial" step="1">
+<label>Bloco final</label>
+<input type="number" id="g2_final" step="1">
+<label>Preço por litro</label>
+<input type="number" id="g2_preco" step="0.01" value="5.98">
+<div class="result" id="g2_result">Litros: 0 | Total: R$ 0,00</div>
+</div>
+
+<!-- Etanol -->
+<div class="fuel">
+<h2>Etanol</h2>
+<label>Bloco inicial</label>
+<input type="number" id="e_inicial" step="1">
+<label>Bloco final</label>
+<input type="number" id="e_final" step="1">
+<label>Preço por litro</label>
+<input type="number" id="e_preco" step="0.01" value="4.49">
+<div class="result" id="e_result">Litros: 0 | Total: R$ 0,00</div>
+</div>
+
+<!-- Diesel -->
+<div class="fuel">
+<h2>Diesel</h2>
+<label>Bloco inicial</label>
+<input type="number" id="d_inicial" step="1">
+<label>Bloco final</label>
+<input type="number" id="d_final" step="1">
+<label>Preço por litro</label>
+<input type="number" id="d_preco" step="0.01" value="5.48">
+<div class="result" id="d_result">Litros: 0 | Total: R$ 0,00</div>
+</div>
+
+<button onclick="calcular()">Calcular Encerrante</button>
+<button onclick="gerarPDF()">Gerar PDF</button>
+
+<div class="total">
+<span>Total Geral</span>
+<strong id="total_geral">R$ 0,00</strong>
+</div>
+</div>
+
+<!-- jsPDF CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+let totalGeral = 0;
+let encerranteData = {};
+
+function calc(blocoInicial, blocoFinal, preco) {
+    blocoInicial = parseInt(blocoInicial) || 0;
+    blocoFinal = parseInt(blocoFinal) || 0;
+    preco = parseFloat(preco) || 0;
+
+    let litros = blocoFinal - blocoInicial;
+    if(litros < 0) litros = 0;
+
+    let total = litros * preco;
+    return {litros, total};
+}
+
+function calcular() {
+    const g1 = calc(document.getElementById('g1_inicial').value,
+                    document.getElementById('g1_final').value,
+                    document.getElementById('g1_preco').value);
+    const g2 = calc(document.getElementById('g2_inicial').value,
+                    document.getElementById('g2_final').value,
+                    document.getElementById('g2_preco').value);
+    const e = calc(document.getElementById('e_inicial').value,
+                   document.getElementById('e_final').value,
+                   document.getElementById('e_preco').value);
+    const d = calc(document.getElementById('d_inicial').value,
+                   document.getElementById('d_final').value,
+                   document.getElementById('d_preco').value);
+
+    // Atualiza resultados
+    document.getElementById('g1_result').innerText = 
+        `Litros: ${g1.litros} | Total: ${g1.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+    document.getElementById('g2_result').innerText = 
+        `Litros: ${g2.litros} | Total: ${g2.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+    document.getElementById('e_result').innerText = 
+        `Litros: ${e.litros} | Total: ${e.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+    document.getElementById('d_result').innerText = 
+        `Litros: ${d.litros} | Total: ${d.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+
+    totalGeral = g1.total + g2.total + e.total + d.total;
+    document.getElementById('total_geral').innerText = totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    encerranteData = { g1, g2, e, d, totalGeral };
+}
+
+function gerarPDF() {
+    if(!encerranteData.totalGeral) {
+        alert("Por favor, calcule o encerrante antes de gerar o PDF.");
+        return;
+    }
+
+    // Número do relatório
+    let relatorioNumero = localStorage.getItem('relatorioNumero') || 0;
+    relatorioNumero = parseInt(relatorioNumero) + 1;
+    localStorage.setItem('relatorioNumero', relatorioNumero);
+
+    // Data e hora
+    const now = new Date();
+    const dataHora = now.toLocaleString('pt-BR', { hour12: false });
+
+    // Criar PDF
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    doc.text(`Encerrante Diário - Relatório #${relatorioNumero}`, 14, 20);
+    doc.setFontSize(12);
+    doc.text(`Data/Hora: ${dataHora}`, 14, 30);
+
+    let y = 45;
+    ['g1','g2','e','d'].forEach(key => {
+        const fuelName = key === 'g1' ? 'Gasolina 1' :
+                         key === 'g2' ? 'Gasolina 2' :
+                         key === 'e' ? 'Etanol' : 'Diesel';
+        const fuel = encerranteData[key];
+        doc.text(`${fuelName}:`, 14, y);
+        doc.text(`Litros: ${fuel.litros}`, 40, y);
+        doc.text(`Total: ${fuel.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 100, y);
+        y += 10;
+    });
+
+    doc.text(`Total Geral: ${encerranteData.totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 14, y+10);
+
+    // Salvar PDF
+    doc.save(`encerrante_${relatorioNumero}.pdf`);
+    alert(`PDF do encerrante #${relatorioNumero} gerado com sucesso!`);
+}
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js");
+}
+</script>
+
+</body>
+</html>
