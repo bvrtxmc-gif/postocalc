@@ -1,11 +1,13 @@
 {
   "description": "Aplicativo de encerrante diário para posto de combustível, com cálculo por bomba e geração de PDF.",
   "name": "Encerrante Diário",
-  "short_name": "Encerrante",
-  "start_url": "./index.html",
+  "short_name": "PostoCalc",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#020617",
   "theme_color": "#0f172a",
-  "dir": "rtl",
-  "scope": "./"
+  "id": "./index.html",
+  "categories": [
+    "business"
+  ]
 }
